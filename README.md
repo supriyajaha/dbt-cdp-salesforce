@@ -1,2 +1,2 @@
 # dbt-salesforcecdp
-Dbt adapter to integrate with Salesforce CDP
+Dbt adapter to integrate with Salesforce CDP.
