@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.adapters.base import Credentials
-from dbt.adapters.sql import SQLConnectionManager
+
 
 @dataclass
 class MyAdapterCredentials(Credentials):
@@ -73,19 +73,19 @@ class SalesforceCDPAdapterConnectionManager(SQLConnectionManager):
         res = cursor.fetchone()
         logger.debug("Canceled query '{}': {}".format(connection_name, res))
 
-        @contextmanager
-    def exception_handler(self, sql: str):
-        try:
-            yield
-        except myadapter_library.DatabaseError as exc:
-            self.release(connection_name)
+    # @contextmanager
+    # def exception_handler(self, sql: str):
+    #     try:
+    #         yield
+    #     except myadapter_library.DatabaseError as exc:
+    #         self.release(connection_name)
 
-            logger.debug('myadapter error: {}'.format(str(e)))
-            raise dbt.exceptions.DatabaseException(str(exc))
-        except Exception as exc:
-            logger.debug("Error running SQL: {}".format(sql))
-            logger.debug("Rolling back transaction.")
-            self.release(connection_name)
-            raise dbt.exceptions.RuntimeException(str(exc))
+    #         logger.debug('myadapter error: {}'.format(str(e)))
+    #         raise dbt.exceptions.DatabaseException(str(exc))
+    #     except Exception as exc:
+    #         logger.debug("Error running SQL: {}".format(sql))
+    #         logger.debug("Rolling back transaction.")
+    #         self.release(connection_name)
+    #         raise dbt.exceptions.RuntimeException(str(exc))
 
     
