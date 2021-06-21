@@ -1,0 +1,11 @@
+target:
+  type: dbt-cdp-salesforce
+  userName: 232e2e@cdp.org
+  password: test1234
+  clientId: 3MVG9SemV5D80oBcgWlgI8AZBNui7FDe1fAxwQh1xDxQ1fz6ClS5nbTKqNQSm9JjhNwfhf.1heAhDblREFIXJ
+  clientSecret: 41E7B104BA06328F684FFC089313D35E4E77DABBAA7BF3813F2CAAF41C75BAE0
+sequences:
+  test_dbt_empty: empty
+  test_dbt_base: base
+  test_dbt_ephemeral: ephemeral
+  test_dbt_incremental: incremental

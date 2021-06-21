@@ -1,6 +1,6 @@
 import jaydebeapi
 from dataclasses import dataclass
-
+from jaydebeapi import Connection
 from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.adapters.base import Credentials
@@ -8,6 +8,7 @@ from dbt.logger import GLOBAL_LOGGER as logger
 from dbt.exceptions import (
     FailedToConnectException, RuntimeException, DatabaseException
 )
+from contextlib import contextmanager
 
 
 @dataclass
@@ -28,7 +29,7 @@ class MyAdapterCredentials(Credentials):
         return 'username', 'clientId'
 
 
-class SalesforceCDPAdapterConnectionManager():
+class DbtCdpAdapterConnectionManager(SQLConnectionManager):
     TYPE = 'dbt-cdp-salesforce'
 
     @classmethod
@@ -73,6 +74,40 @@ class SalesforceCDPAdapterConnectionManager():
         connection.handle = handle
         connection.state = 'open'
         return connection
+
+    @classmethod
+    def get_response(cls, cursor):
+        return 'OK'
+
+    @classmethod
+    def cancel(cls, connection):
+        connection_name = connection.name
+        cdp_connection = connection.handle
+
+        logger.info("Cancelling query '{}' ".format(connection_name))
+
+        try:
+            Connection.close(cdp_connection)
+        except Exception as e:
+            logger.error('Error closing connection for cancel request')
+            raise Exception(str(e))
+
+        logger.info("Canceled query '{}'".format(connection_name))
+
+    @contextmanager
+    def exception_handler(self, sql: str):
+        try:
+            yield
+        except jaydebeapi.DatabaseError as exc:
+            self.release()
+
+            logger.debug('jaydebeapi error: {}'.format(str(e)))
+            raise DatabaseException(str(exc))
+        except Exception as exc:
+            logger.debug("Error running SQL: {}".format(sql))
+            logger.debug("Rolling back transaction.")
+            self.release()
+            raise RuntimeException(str(exc))
 
     # @classmethod
     # def get_response(cls, cursor):
