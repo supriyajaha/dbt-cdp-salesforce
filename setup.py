@@ -11,9 +11,9 @@ setup(
     version=package_version,
     description=description,
     long_description=description,
-    author="Supriya",
+    author="Supriya-Srishti",
     author_email="sjahagirdar@salesforce.com",
-    url="",
+    url="https://github.com/forcedotcom/Salesforce-CDP-jdbc",
     packages=find_packages(),
     package_data={
         'dbt': [

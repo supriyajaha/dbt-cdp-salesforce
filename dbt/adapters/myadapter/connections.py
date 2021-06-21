@@ -5,37 +5,40 @@ from dbt.adapters.base import Credentials
 from dbt.adapters.sql import SQLConnectionManager
 from dbt.adapters.base import Credentials
 from dbt.logger import GLOBAL_LOGGER as logger
+from dbt.exceptions import (
+    FailedToConnectException, RuntimeException, DatabaseException
+)
 
 
 @dataclass
 class MyAdapterCredentials(Credentials):
     # Add credentials members here, like:
     username: str
-    password: int
+    password: str
     clientId: str
     clientSecret: str
 
     @property
     def type(self):
-        return 'salesforce-cdp'
+        return 'dbt-cdp-salesforce'
 
     def _connection_keys(self):
         # return an iterator of keys to pretty-print in 'dbt debug'.
         # Omit fields like 'password'!
-        return ('username', 'clientId')
+        return 'username', 'clientId'
 
 
 class SalesforceCDPAdapterConnectionManager():
-    TYPE = 'salesforce-cdp'
+    TYPE = 'dbt-cdp-salesforce'
 
     @classmethod
     def open(cls, connection):
-        #if connection.state == 'open':
-           # logger.debug('Connection is already open, skipping open.')
-           # return connection
+        if connection.state == 'open':
+            logger.debug('Connection is already open, skipping open.')
+            return connection
 
-        ## credentials = cls.get_credentials(connection.credentials)
-        ## print(credentials)
+        credentials = cls.get_credentials(connection.credentials)
+        print('Credentials from profiles.yml --> ' + credentials)
 
         try:
             properties = {
@@ -45,32 +48,30 @@ class SalesforceCDPAdapterConnectionManager():
                 'clientSecret': '41E7B104BA06328F684FFC089313D35E4E77DABBAA7BF3813F2CAAF41C75BAE0'
             }
 
-            conn = jaydebeapi.connect("com.salesforce.cdp.queryservice.QueryServiceDriver",
-                                      "jdbc:queryService-jdbc:https://login.salesforce.com", properties,
-                                      'queryService-jdbc-1.3-jar-with-dependencies.jar', )
+            handle = jaydebeapi.connect("com.salesforce.cdp.queryservice.QueryServiceDriver",
+                                        "jdbc:queryService-jdbc:https://login.salesforce.com", properties,
+                                        'queryService-jdbc-1.3-jar-with-dependencies.jar', )
 
-            cur = conn.cursor()
-            args = {}
-            cur.execute('select ssot__Number__c from ssot__Account__dlm limit 10', args)
-            one = cur.fetchall()
-            print(one)
-            conn.close()
+            # cur = conn.cursor()
+            # args = {}
+            # cur.execute('select ssot__Number__c from ssot__Account__dlm limit 10', args)
+            # one = cur.fetchall()
+            # print(one)
+            # conn.close()
 
             connection.state = 'open'
-            connection.handle = conn
-        except Exception as inst:
-            print(inst)
-            print('error making the connection object')
-            # handle = myadapter_library.connect(
-            #     host=credentials.host,
-            #     port=credentials.port,
-            #     username=credentials.username,
-            #     password=credentials.password,
-            #     catalog=credentials.database
-            # )
-            #connection.handle = None
-            #connection.state = 'fail'
-            #raise dbt.exceptions.FailedToConnectException('error making the connection object')
+            connection.handle = handle
+        except Exception as e:
+            logger.debug("Got an error when attempting to create a bigquery "
+                         "client: '{}'".format(e))
+
+            connection.handle = None
+            connection.state = 'fail'
+
+            raise FailedToConnectException(str(e))
+
+        connection.handle = handle
+        connection.state = 'open'
         return connection
 
     # @classmethod
