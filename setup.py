@@ -22,7 +22,7 @@ setup(
         ]
     },
     install_requires=[
-        "dbt-core==0.19.0-rc1",
+        "dbt-core==0.19.1",
         "JayDeBeApi==1.2.3"
     ]
 )
